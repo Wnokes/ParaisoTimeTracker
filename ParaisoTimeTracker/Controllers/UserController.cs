@@ -1,29 +1,47 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using ParaisoTimeTracker.Models;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-
-// For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace ParaisoTimeTracker.Controllers
 {
-    public class UserController : Controller
+    [Route("api/[controller]")]
+    [ApiController]
+    public class UserController : ControllerBase
     {
-        // 
-        // GET: /HelloWorld/
-
-        public string Index()
+        private readonly UserContext _userContext;
+        public UserController(UserContext userContext)
         {
-            return "This is my default action...";
+            _userContext = userContext;
+
+            if (_userContext.UserItems.Count() == 0)
+            {
+                _userContext.UserItems.Add(new UserItem { Id = 1, Name = "Super Admin" });
+            }
         }
 
-        //
-        // GET: /HelloWorld/Welcome/
-
-        public String Welcome()
+        // GET api/user
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<UserItem>>> GetUsers()
         {
-            return "Welcome";
+            return await _userContext.UserItems.ToListAsync();
         }
+
+        // GET: api/User/5
+        [HttpGet("{id}")]
+        public async Task<ActionResult<UserItem>> GetUser(long id)
+        {
+            var userItem = await _userContext.UserItems.FindAsync(id);
+
+            if (userItem == null)
+            {
+                return NotFound();
+            }
+
+            return userItem;
+        }
+
     }
 }
